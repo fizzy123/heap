@@ -1,0 +1,52 @@
+{% extends 'base_settings.html' %}
+
+{% block scripts %}
+        <script type="text/javascript" src="{{ url_for('static', filename='feeds.js') }}"></script>
+{% endblock %}
+{% block body %}
+    <div class='section' id='feeds'>
+        <form>
+            <div class='selector-container'>
+                <div class='selector active' data-name='rss'>
+                    RSS
+                </div>
+                <div class='selector' data-name='hn'>
+                    Hacker News
+                </div>
+                <div class='selector' data-name='reddit'>
+                    Reddit
+                </div>
+            </div>
+            <div id='add_rss' class='form'>
+                <input id='rss_url' type='text' placeholder='RSS URL'> 
+                <div id='add_rss_button' class='button'>Add RSS Feed</div>
+            </div>
+            <div id='add_hn' class='form' style='display:none'>
+                <input id='hn_score' type='text' placeholder='Score Threshold'> 
+                <div id='add_hn_button' class='button'>Add HN Feed</div>
+            </div>
+            <div id='add_reddit' class='form' style='display:none'>
+                <div id='add_reddit_button' class='button'>Add Reddit Feed</div>
+            </div>
+            <div id='added' class='success hide'>Added!</div><div id='rss_error' class='error'></div>
+            <div id='rss_feed_container' class='list_container'>
+                <div id='rss_feed_header' class='list_header'>
+                    Your RSS Feeds:
+                </div>
+                <div id='rss_feeds' class='list'>
+                    {% for source in sources %}
+                        <div class='source list_item' id='{{source.id}}'>
+                            <div class='list_item_name'>
+                                {{source.name}}
+                            </div>
+                            <div class='list_item_desc'>
+                                {{source.url}}
+                            </div>
+                            <div class='delete_button small_button'>Delete</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}

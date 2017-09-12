@@ -1,0 +1,33 @@
+{% extends 'base_settings.html' %}
+
+{% block scripts %}
+        <script type="text/javascript" src="{{ url_for('static', filename='items.js') }}"></script>
+{% endblock %}
+{% block body %}
+    <div class='section' id='items'>
+        <div class='item-list'>
+            <div class='sources'>
+                {% for source in sources %}
+                    <div class='source active' data-id='{{source.id}}'>
+                        {{source.name}}
+                    </div>
+                {% endfor %}
+                    <div class='source active' data-id=''>
+                        Added
+                    </div>
+            </div>
+            <div class='items'>
+                {% for item in items %}
+                    <div class='item' data-id='{{item.id}}'>
+                        <a href='{{item.url}}'>{{item.url}}</a>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class='item-nav'>
+              <div class='page'></div>
+              <div class='next'>Next</div>
+              <div class='prev'>Prev</div>
+            </div>
+      </div>
+    </div>
+{% endblock %}

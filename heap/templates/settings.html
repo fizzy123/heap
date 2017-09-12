@@ -1,0 +1,86 @@
+{% extends base_settings %}
+
+{% block script %}
+    <script type="text/javascript" src="{{ url_for('static', filename='settings.js') }}"></script>
+{% endblock %}
+{% block body %}
+    <div class='section' id='account'>
+        <form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input id='email' type='text' value='{{user.email}}' placeholder='New Email'> 
+            <div id='email_error' class='error'></div>
+            <input id='password' type='password' placeholder='New Password'><br/>
+            <input id='password_repeat' type='password' placeholder='Repeat New Password'>
+            <div id='password_error' class='error'></div>
+            <div id='apply_changes_button' class='button'>Save Account Settings</div><div id='saved' class='success hide'>Saved!</div>
+        </form>
+
+        <div id='sign_out_button' class='button'>Sign Out</div>
+    </div>
+    <div class='section' id='feeds' style='display:none;'>
+        <form>
+            <div class='selector-container'>
+                <div class='selector active' data-name='rss'>
+                    RSS
+                </div>
+                <div class='selector' data-name='hn'>
+                    Hacker News
+                </div>
+                <div class='selector' data-name='reddit'>
+                    Reddit
+                </div>
+            </div>
+            <div id='add_rss' class='form'>
+                <input id='rss_url' type='text' placeholder='RSS URL'> 
+                <div id='add_rss_button' class='button'>Add RSS Feed</div>
+            </div>
+            <div id='add_hn' class='form' style='display:none'>
+                <input id='hn_score' type='text' placeholder='Score Threshold'> 
+                <div id='add_hn_button' class='button'>Add HN Feed</div>
+            </div>
+            <div id='add_reddit' class='form' style='display:none'>
+                <div id='add_reddit_button' class='button'>Add Reddit Feed</div>
+            </div>
+            <div id='added' class='success hide'>Added!</div><div id='rss_error' class='error'></div>
+            <div id='rss_feed_container' class='list_container'>
+                <div id='rss_feed_header' class='list_header'>
+                    Your RSS Feeds:
+                </div>
+                <div id='rss_feeds' class='list'>
+                    {% for source in sources %}
+                        <div class='source list_item' id='{{source.id}}'>
+                            <div class='list_item_name'>
+                                {{source.name}}
+                            </div>
+                            <div class='list_item_desc'>
+                                {{source.url}}
+                            </div>
+                            <div class='delete_button small_button'>Delete</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class='section' id='items' style='display:none;'>
+        <div class='item-list'>
+            <div class='sources'>
+                {% for source in sources %}
+                    <div class='source' data-id='{{source.id}}'>
+                        {{source.name}}
+                    </div>
+                {% endfor %}
+                    <div class='source' data-id=''>
+                        Added
+                    </div>
+            </div>
+            <div class='items'>
+                {% for item in items %}
+                    <div class='item' data-id='{{item.id}}'>
+                        <a href='{{item.url}}'>{{item.url}}</a>
+                    </div>
+                {% endfor %}
+            </div>
+      </div>
+    </div>
+{% endblock %}
