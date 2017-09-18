@@ -6,7 +6,6 @@ import logging
 
 import pprint
 import requests
-import pytz
 import feedparser
 import urllib3
 
@@ -26,7 +25,7 @@ def update_feeds():
     item_count = len(Item.query.all())
     for source in sources:
         update_feed(source)
-    logger.info("Updated %s items", len(Item.query.all()) - item_count)
+    print("Updated {} items".format(len(Item.query.all()) - item_count))
 
 def resolve_url(url):
     found = False
@@ -52,9 +51,8 @@ def resolve_url(url):
 
 def resolve_urls():
     # get the final urls after all the redirects
-    items = Item.query.filter(Item.read.is_(False)).all()
+    items = Item.query.filter(Item.read.is_(False), Item.url.like("http://theawesomer%")).all()
     for item in items:
-        print(item.url)
         url, x_frame_options = resolve_url(item.url)
         item.url = url
         item.x_frame_options = x_frame_options
@@ -78,17 +76,19 @@ def update_feed(source):
             # checks whether or not items have been pulled from this source before or not
             new_entries = []
             for entry in data['children']:
-                if source.items.filter(Item.url == 'https://www.reddit.com' + entry['data']['permalink']).exists():
+                if not Item.query.filter(Item.source_id == Source.id) \
+                                 .filter(Item.url == "https://www.reddit.com{}".format(entry['data']['permalink'])) \
+                                 .first():
                     new_entries.append(entry)
         else:
             new_entries = data['children']
         for entry in new_entries:
-            item = Item(source=source, url='https://www.reddit.com' + entry['data']['permalink'], x_frame_options=True)
+            item = Item(source_id=source.id, user_id=source.user_id, url='https://www.reddit.com' + entry['data']['permalink'], x_frame_options=True)
             db.session.add(item)
     else:
         # pull rss feed
         feed = feedparser.parse(url)
-        if not re.search(r"Hacker News: ", source.name) and hasattr(feed.feed, 'title'):
+        if (not source.name or not re.search(r"Hacker News: ", source.name)) and hasattr(feed.feed, 'title'):
             # Want to include score in hacker news rss feed,
             # so we don't take the title from the feed object
             source.name = feed.feed.title
@@ -97,14 +97,14 @@ def update_feed(source):
             source.name = url
         if source.updated:
             # checks whether or not items have been pulled from this source before or not
-            new_entries = [entry for entry in feed.entries if (hasattr(entry, 'published_parsed')) and (pytz.utc.localize(datetime(*(entry.published_parsed[0:6]))) > source.updated)]
+            new_entries = [entry for entry in feed.entries if (hasattr(entry, 'published_parsed')) and (datetime(*(entry.published_parsed[0:6])) > source.updated)]
         else:
             new_entries = feed.entries
         for entry in new_entries:
             url, x_frame_options = resolve_url(entry.link)
             item = Item.query.filter(Item.url == url, Item.source == source).first()
             if not item:
-                item = Item(source=source, url=url, x_frame_options=x_frame_options)
+                item = Item(source_id=source.id, user_id=source.user_id, url=url, x_frame_options=x_frame_options)
                 db.session.add(item)
     db.session.commit()
 

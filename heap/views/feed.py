@@ -17,8 +17,7 @@ feed_blueprint = Blueprint('feed', __name__)
 def redirect_view(newtab=True):
     iframe = False
     if newtab:
-        item = Item.query.join(Source) \
-                         .join(User) \
+        item = Item.query.join(User) \
                          .filter(User.id == session['user'],
                                  Item.read.is_(False),
                                  Item.x_frame_options.is_(False)) \
@@ -27,8 +26,7 @@ def redirect_view(newtab=True):
         if item:
             iframe = True
     if not iframe:
-        item = Item.query.join(Source) \
-                         .join(User) \
+        item = Item.query.join(User) \
                          .filter(User.id == session['user'],
                                  Item.read.is_(False)) \
                          .order_by(func.random()) \
@@ -43,28 +41,31 @@ def redirect_view(newtab=True):
 def add_source_view():
     #not being escaped cause we're just adding a source
     url = request.form.get('url')
-    if request.form.get('refresh_token'):
-        source = Source.query.join(User) \
-                             .filter(User.id == session['user'],
-                                     Source.url == url,
-                                     Source.refresh_token == request.form.get('refresh_token')) \
-                             .first()
+    if not url:
+        url = session.get('url')
+        if url:
+            del session['url']
+    if session.get('refresh_token'):
+        source = Source(user_id=session['user'],
+                        url=url,
+                        refresh_token=session.get('refresh_token'))
+        del session['refresh_token']
     else:
-        source = Source.query.join(User) \
-                             .filter(User.id == session['user'],
-                                     Source.url == url) \
-                             .first()
+        source = Source(user_id=session['user'], url=url)
 
-    update_feed(source)
+    db.session.add(source)
     if request.form.get('score'):
         source.name = 'Hacker News: Score ' + request.form.get('score')
+    # saves within update feed
+    update_feed(source)
+
     db.session.commit()
     return jsonify({'success': True, 'source': source.dictify()})
 
 @feed_blueprint.route('/add_hn_source/', methods=['POST'])
 @login_required
 def add_hn_source_view():
-    request.form['url'] = 'http://hnapp.com/rss?q=type%3Astory%20score>' + request.form.get('score')
+    session['url'] = 'http://hnapp.com/rss?q=type%3Astory%20score>' + request.form.get('score')
     return add_source_view()
 
 @feed_blueprint.route('/delete_source/', methods=['POST'])
@@ -78,8 +79,7 @@ def delete_source_view():
 @feed_blueprint.route('/check_url/', methods=['POST'])
 @login_required
 def check_url_view():
-    item = Item.query.join(Source) \
-                     .join(User) \
+    item = Item.query.join(User) \
                      .filter(Item.url.contains(parse_url(request.form.get('url'))),
                              Item.read.is_(False),
                              User.id == session['user']) \
@@ -91,8 +91,7 @@ def check_url_view():
 @feed_blueprint.route('/action/', methods=['POST'])
 @login_required
 def action_view():
-    item = Item.query.join(Source) \
-                     .join(User) \
+    item = Item.query.join(User) \
                      .filter(Item.url.contains(parse_url(request.form.get('url'))),
                              Item.read.is_(False),
                              User.id == session['user']) \
@@ -118,8 +117,8 @@ def mark_read_view(item=None):
 @login_required
 def add_item_view():
     #Not being parsed cause not being used in search
-    url = request.utils.unquote(request.form.get('url')).decode("utf8")
-    item = Item(url=url)
+    url = bytes(request.form.get('url'), 'utf-8').decode("utf8")
+    item = Item(url=url, user_id=session['user'])
     db.session.add(item)
     db.session.commit()
     return jsonify({'success': True})
@@ -131,7 +130,7 @@ def redditd_view():
         return redirect(url_for('ui.feeds_view'))
     username = 's03SUqQUXI4Txw'
     password = 'QsWUsTMAW4e0BH2c90NJ7zH3Kz8'
-    client_auth = request.auth.HTTPBasicAuth(username, password)
+    client_auth = requests.auth.HTTPBasicAuth(username, password)
 
     redirect_url = 'http://heap.nobr.me/feed/redditd/'
     post_data = {
@@ -153,8 +152,8 @@ def redditd_view():
     if 'error' in res_dict:
         return redirect(url_for('ui.feeds_view'))
 
-    request.form['refresh_token'] = res_dict['refresh_token']
-    request.form['url'] = 'https://oauth.reddit.com/hot.rss?sort=hot'
+    session['refresh_token'] = res_dict['refresh_token']
+    session['url'] = 'https://oauth.reddit.com/hot.rss?sort=hot'
     add_source_view()
 
     return redirect(url_for('ui.feeds_view') + '?message=reddit_add')

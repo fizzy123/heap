@@ -12,18 +12,20 @@ class Source(db.Model):
     refresh_token = db.Column(db.String())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    def __init__(self, name, owner, url):
+    def __init__(self, name=None, user_id=None, url=None, refresh_token=None):
         self.name = name
-        self.owner = owner
+        self.user_id = user_id
         self.url = url
+        self.refresh_token = refresh_token
 
     def dictify(self):
         return {
             'id': self.id,
-            'owner': self.owner.id,
+            'owner': self.user_id,
             'name': self.name,
             'url': self.url,
-            'updated': self.updated.isoformat()
+            'updated': self.updated.isoformat(),
+            'refresh_token': self.refresh_token
         }
 
     def __repr__(self):

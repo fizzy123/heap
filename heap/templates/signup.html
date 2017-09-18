@@ -5,7 +5,7 @@
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-2.1.0.min.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='jquery.cookie.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='general.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='signup.js' }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='signup.js') }}"></script>
 				<script type="text/javascript">
 					var csrf_token = "{{ csrf_token() }}";
 
@@ -19,7 +19,7 @@
 				</script>
         <link rel="stylesheet"
               type="text/css"
-              href="{{ url_for('static', filename='base.css' }}"/>
+              href="{{ url_for('static', filename='base.css') }}"/>
     </head>
 </html>
 <body>
@@ -34,6 +34,6 @@
         <div id='sign_up_button' class='button'>Sign Up</div>
     </form>
     <div class='info'>
-      Have an account already? Sign in <a href='{{ url "ui.signin_view" }}'>here</a>.
+      Have an account already? Sign in <a href='{{ url_for("ui.signin_view") }}'>here</a>.
     </div>
 </body>

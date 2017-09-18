@@ -19,6 +19,7 @@ class User(db.Model):
         nullable=False,
     )
     sources = db.relationship('Source', backref='owner')
+    items = db.relationship('Item', backref='owner')
 
     def __init__(self, email, password):
         self.email = email

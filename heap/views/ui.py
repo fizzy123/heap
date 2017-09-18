@@ -1,4 +1,5 @@
 import logging
+import math
 from flask import Blueprint, redirect, jsonify, session, render_template, request, url_for
 
 from heap import db
@@ -101,7 +102,7 @@ def items_view():
 @ui_blueprint.route('/list_items/', methods=['POST'])
 @login_required_redirect
 def list_items_view():
-    page = int(request.form.get('page'))
+    page = int(request.form.get('page', 1)) - 1
     source_ids = request.form.getlist('sources[]')
     user = User.query.get(session['user'])
     items = []
@@ -110,7 +111,7 @@ def list_items_view():
             items = items + [item.dictify() for item in source.items]
     return jsonify({
         'items': items[page*25:(page+1)*25],
-        'total': len(items)
+        'total': math.ceil(len(items) / 25)
     })
 
 #pylint: disable=line-too-long
